@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reloj Multifuncional (Digital y Analógico)</title>
+<style>
+  /* --- Variables CSS --- */
+  :root {
+    /* Tema Oscuro (Predeterminado) */
+    --primary-color: #00ffff; /* Cían brillante */
+    --secondary-color: #ff00ff; /* Magenta brillante */
+    --accent-color: #ff0000; /* Rojo */
+    --bg-color: #0b132b; /* Azul oscuro (Noche) */
+    --text-color: #fff;
+    --clock-bg: #000;
+    --clock-border: #fff;
+    --section-bg: rgba(255, 255, 255, 0.1);
+    --transition-speed: 0.5s;
+    --font-family: 'Segoe UI', Tahoma, sans-serif;
+  }
+
+  [data-theme="light"] {
+    /* Tema Claro */
+    --primary-color: #0088cc;
+    --secondary-color: #cc00cc;
+    --accent-color: #cc0000;
+    --bg-color: #f0f0f0;
+    --text-color: #333;
+    --clock-bg: #fff;
+    --clock-border: #333;
+    --section-bg: rgba(0, 0, 0, 0.05);
+  }
+
+  /* --- Base y Contenedores --- */
+  body {
+    font-family: var(--font-family);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
+  }
+
+  .container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 40px;
+    max-width: 1000px;
+    width: 100%;
+  }
+
+  /* --- Estilos Comunes --- */
+  .clock-container, .feature-section {
+    padding: 20px;
+    border-radius: 15px;
+    background: var(--section-bg);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(5px);
+    transition: background var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+  }
+
+  /* --- Reloj Digital --- */
+  .clock-container {
+    text-align: center;
+    min-width: 300px;
+  }
+  
+  #clock {
+    font-size: 3.5em; /* Reducido para mejor ajuste */
+    margin: 0;
+    color: var(--primary-color);
+    text-shadow: 0 0 10px var(--primary-color), 0 0 20px var(--primary-color);
+    transition: all var(--transition-speed) ease;
+    letter-spacing: 2px;
+  }
+
+  #date {
+    margin-top: 10px;
+    font-size: 1.1em;
+    opacity: 0.9;
+  }
+
+  .controls { margin-top: 20px; }
+  .control-group {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+  }
+  
+  label {
+    font-size: 0.9em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    margin: 5px 10px;
+  }
+
+  /* --- Componentes de Formulario --- */
+  input[type="checkbox"] {
+    margin-right: 5px;
+    transform: scale(1.2);
+    vertical-align: middle;
+  }
+
+  input[type="time"], input[type="number"] {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--primary-color);
+    border-radius: 5px;
+    padding: 6px 10px;
+    color: var(--text-color);
+    font-size: 1em;
+    transition: all 0.3s ease;
+    text-align: center;
+    max-width: 100px;
+  }
+  
+  [data-theme="light"] input[type="time"], 
+  [data-theme="light"] input[type="number"] {
+      background: rgba(0, 0, 0, 0.05);
+      color: var(--text-color);
+  }
+
+  button {
+    background: var(--primary-color);
+    color: #333; /* Color oscuro para contraste en botones */
+    border: none;
+    border-radius: 5px;
+    padding: 8px 15px;
+    font-size: 0.9em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin: 5px;
+    font-weight: bold;
+  }
+
+  button:hover {
+    background: var(--secondary-color);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
+
+  /* --- Funcionalidades Adicionales --- */
+  .features {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-top: 30px;
+    width: 100%;
+    max-width: 700px;
+  }
+
+  .feature-title {
+    font-size: 1.2em;
+    margin-bottom: 10px;
+    color: var(--primary-color);
+    border-bottom: 2px solid var(--primary-color);
+    padding-bottom: 5px;
+    font-weight: 600;
+  }
+  
+  .timer-display {
+    font-size: 1.8em;
+    margin: 10px 0;
+    color: var(--accent-color);
+    font-weight: bold;
+    text-shadow: 0 0 5px var(--accent-color);
+  }
+  
+  #alarmStatus {
+      font-size: 1em;
+      margin-top: 10px;
+      opacity: 0.8;
+  }
+  
+  .alarm-active {
+    box-shadow: 0 0 15px 5px var(--accent-color); /* Indicador visual de alarma */
+  }
+
+  /* --- Animación de Alarma (Corrección) --- */
+  .alarm-ring {
+    animation: pulse 1s infinite alternate;
+  }
+
+  @keyframes pulse {
+    from { background-color: var(--bg-color); }
+    to { background-color: var(--accent-color); }
+  }
+
+
+  /* --- Reloj Analógico (CORREGIDO) --- */
+  .analog-clock {
+    position: relative;
+    width: 300px;
+    height: 300px;
+    border: 8px solid var(--clock-border);
+    border-radius: 50%;
+    background-color: var(--clock-bg);
+    box-shadow: 0 0 25px rgba(0, 0, 0, 0.7);
+    transition: border-color var(--transition-speed) ease, background-color var(--transition-speed) ease;
+  }
+
+  .hand {
+    position: absolute;
+    height: 4px;
+    top: 50%;
+    left: 50%;
+    /* Mantiene el punto de pivote en el centro */
+    transform-origin: 0% 50%;
+    /* Eliminar rotación inicial de -90deg del CSS, se maneja en JS */
+    transition: transform 0.1s cubic-bezier(0.4, 2.3, 0.3, 1);
+  }
+
+  .hour { 
+    height: 6px; 
+    background: var(--secondary-color); 
+    width: 30%; 
+    z-index: 3;
+    border-radius: 3px;
+  }
+  .minute { 
+    height: 4px; 
+    background: var(--primary-color); 
+    width: 40%; 
+    z-index: 2;
+    border-radius: 2px;
+  }
+  .second { 
+    height: 2px; 
+    background: var(--accent-color); 
+    width: 45%; 
+    z-index: 1;
+    border-radius: 1px;
+    /* La aguja de segundos debe ser más rápida y no tan "saltarina" */
+    transition: transform 0.05s linear; 
+  }
+
+  .center {
+    position: absolute;
+    width: 15px;
+    height: 15px;
+    background: var(--accent-color);
+    border-radius: 50%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+  }
+
+  .number {
+    position: absolute;
+    color: var(--text-color);
+    font-size: 1.1em;
+    font-weight: bold;
+    text-align: center;
+    width: 24px;
+    height: 24px;
+    transform: translate(-50%, -50%);
+    z-index: 5;
+    transition: color var(--transition-speed) ease;
+  }
+
+  .mark {
+    position: absolute;
+    width: 2px;
+    height: 6px; /* Marcas más pequeñas */
+    background: var(--text-color);
+    left: 50%;
+    transform: translateX(-50%);
+    transform-origin: bottom;
+    transition: background var(--transition-speed) ease;
+  }
+  
+  .mark.long {
+    height: 10px;
+  }
+
+
+  /* --- Responsive --- */
+  @media (max-width: 800px) {
+    #clock { font-size: 2.8em; }
+    .analog-clock { width: 250px; height: 250px; }
+    .container { gap: 20px; }
+    .control-group input[type="number"] { max-width: 70px; }
+  }
+
+  @media (max-width: 600px) {
+    .container { flex-direction: column; }
+    .analog-clock { width: 200px; height: 200px; }
+    .features { max-width: 90%; }
+    .control-group { 
+        justify-content: space-between;
+        gap: 5px;
+    }
+  }
+</style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="clock-container">
+      <h1 id="clock"></h1>
+      <p id="date"></p>
+      
+      <div class="controls">
+        <div class="control-group">
+          <label>
+            <input type="checkbox" id="formatToggle">
+            Formato 12h
+          </label>
+          <label>
+            <input type="checkbox" id="themeToggle">
+            Tema claro
+          </label>
+        </div>
+        
+        <div class="control-group">
+          <label>
+            <input type="checkbox" id="soundToggle">
+            Sonido tic-tac (Requiere interacción)
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="analog-clock" id="analogClock">
+      <div class="hand hour" id="hourHand"></div>
+      <div class="hand minute" id="minuteHand"></div>
+      <div class="hand second" id="secondHand"></div>
+      <div class="center"></div>
+    </div>
+  </div>
+
+  <div class="features">
+    <div class="feature-section" id="alarmSection">
+      <div class="feature-title">Alarma</div>
+      <div class="control-group">
+        <input type="time" id="alarmTime" value="07:00">
+        <button id="setAlarm">Activar Alarma</button>
+        <button id="clearAlarm">Desactivar</button>
+      </div>
+      <p id="alarmStatus">Alarma desactivada</p>
+    </div>
+    
+    <div class="feature-section">
+      <div class="feature-title">Temporizador</div>
+      <div class="control-group">
+        <input type="number" id="timerMinutes" min="0" max="60" placeholder="Min" value="5">
+        <input type="number" id="timerSeconds" min="0" max="59" placeholder="Seg" value="0">
+        <button id="startTimer">Iniciar</button>
+        <button id="stopTimer">Detener / Reset</button>
+      </div>
+      <div class="timer-display" id="timerDisplay">05:00</div>
+    </div>
+    
+    <div class="feature-section">
+      <div class="feature-title">Cronómetro</div>
+      <div class="control-group">
+        <button id="startStopwatch">Iniciar</button>
+        <button id="pauseStopwatch">Pausar</button>
+        <button id="resetStopwatch">Reiniciar</button>
+      </div>
+      <div class="timer-display" id="stopwatchDisplay">00:00:00.00</div>
+    </div>
+  </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  // --- Elementos del DOM ---
+  const clock = document.getElementById("clock");
+  const dateElement = document.getElementById("date");
+  const formatToggle = document.getElementById("formatToggle");
+  const themeToggle = document.getElementById("themeToggle");
+  const soundToggle = document.getElementById("soundToggle");
+  
+  const hourHand = document.getElementById("hourHand");
+  const minuteHand = document.getElementById("minuteHand");
+  const secondHand = document.getElementById("secondHand");
+  const analogClock = document.getElementById("analogClock");
+  
+  const alarmTimeInput = document.getElementById("alarmTime");
+  const setAlarmBtn = document.getElementById("setAlarm");
+  const clearAlarmBtn = document.getElementById("clearAlarm");
+  const alarmStatus = document.getElementById("alarmStatus");
+  const alarmSection = document.getElementById("alarmSection");
+  
+  const timerMinutesInput = document.getElementById("timerMinutes");
+  const timerSecondsInput = document.getElementById("timerSeconds");
+  const startTimerBtn = document.getElementById("startTimer");
+  const stopTimerBtn = document.getElementById("stopTimer");
+  const timerDisplay = document.getElementById("timerDisplay");
+  
+  const startStopwatchBtn = document.getElementById("startStopwatch");
+  const pauseStopwatchBtn = document.getElementById("pauseStopwatch");
+  const resetStopwatchBtn = document.getElementById("resetStopwatch");
+  const stopwatchDisplay = document.getElementById("stopwatchDisplay");
+  
+  // --- Variables de Estado ---
+  let isAlarmActive = false;
+  let alarmTimeout = null;
+  let timerInterval = null;
+  let timerRunning = false;
+  let totalTimerSeconds = 0;
+  
+  let stopwatchInterval = null;
+  let stopwatchRunning = false;
+  let stopwatchTime = 0;
+  
+  let audioContext = null;
+  let tickSoundSource = null; // Usaremos esto para el sonido de alarma también
+  
+  // --- Funciones de Utilidad ---
+  
+  // 1. Sonido y Preferencias
+  
+  // Inicializa el AudioContext (debe hacerse tras una interacción de usuario)
+  function initAudio() {
+    if (!audioContext) {
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+  }
+  
+  // Reproducir un pitido simple (para tic-tac y alarma)
+  function playSound(frequency, duration, volume) {
+    if (!audioContext) return;
+    
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.type = 'sine';
+    oscillator.frequency.value = frequency;
+    gainNode.gain.value = volume;
+    
+    oscillator.start();
+    setTimeout(() => {
+      oscillator.stop();
+    }, duration);
+  }
+  
+  function playTickSound() {
+    if (soundToggle.checked) {
+      playSound(800, 50, 0.1);
+    }
+  }
+  
+  function savePreferences() {
+    localStorage.setItem("clockFormat12h", formatToggle.checked);
+    localStorage.setItem("themeLight", themeToggle.checked);
+    localStorage.setItem("soundEnabled", soundToggle.checked);
+  }
+  
+  function loadPreferences() {
+    formatToggle.checked = localStorage.getItem("clockFormat12h") === "true";
+    themeToggle.checked = localStorage.getItem("themeLight") === "true";
+    soundToggle.checked = localStorage.getItem("soundEnabled") === "true";
+    
+    applyTheme();
+    // Intenta inicializar el audio, aunque la reproducción real requiere interacción.
+    initAudio(); 
+  }
+  
+  function applyTheme() {
+    document.body.setAttribute('data-theme', themeToggle.checked ? 'light' : 'dark');
+  }
+
+  // 2. Reloj Analógico: Creación de marcas y números
+  function createAnalogClockMarks() {
+    // Eliminar previos
+    Array.from(analogClock.querySelectorAll(".number, .mark")).forEach(el => el.remove());
+
+    const center = 150; // La mitad de 300px (ancho/alto del reloj)
+    const radiusNum = 120; // Radio para números
+    const radiusMark = 140; // Radio para marcas
+
+    for (let i = 0; i < 60; i++) {
+      const angle = i * 6; // 360 / 60 = 6 grados por minuto/segundo
+      const rad = (angle - 90) * Math.PI / 180; // Ángulo en radianes (-90 para empezar arriba)
+
+      if (i % 5 === 0) { // Marcas de hora (Números)
+        if (i > 0) {
+            const num = i / 5;
+            const number = document.createElement("div");
+            number.className = "number";
+            number.textContent = num;
+            number.style.left = `${center + radiusNum * Math.cos(rad)}px`;
+            number.style.top = `${center + radiusNum * Math.sin(rad)}px`;
+            analogClock.appendChild(number);
+        }
+        
+        // Marcas largas (para las horas)
+        const longMark = document.createElement("div");
+        longMark.className = "mark long";
+        longMark.style.transform = `translateX(-50%) rotate(${angle}deg) translateY(-${center - radiusMark}px)`;
+        analogClock.appendChild(longMark);
+
+      } else { // Marcas de minutos
+        const mark = document.createElement("div");
+        mark.className = "mark";
+        mark.style.transform = `translateX(-50%) rotate(${angle}deg) translateY(-${center - radiusMark}px)`;
+        analogClock.appendChild(mark);
+      }
+    }
+  }
+  
+  // 3. Actualización de Relojes
+  function updateDigitalClock() {
+    const now = new Date();
+    let hours = now.getHours();
+    const minutes = now.getMinutes().toString().padStart(2, "0");
+    const seconds = now.getSeconds().toString().padStart(2, "0");
+    let ampm = "";
+
+    if (formatToggle.checked) {
+      ampm = hours >= 12 ? "PM" : "AM";
+      hours = hours % 12 || 12; // Convierte 0 a 12 en formato 12h
+    }
+
+    clock.textContent = `${hours.toString().padStart(2,"0")}:${minutes}:${seconds} ${ampm}`.trim();
+    dateElement.textContent = now.toLocaleDateString("es-ES", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric"
+    });
+
+    playTickSound();
+  }
+
+// CORRECCIÓN DEFINITIVA DE LA ROTACIÓN:
+  function updateAnalogClock() {
+    const now = new Date();
+    const hours = now.getHours();
+    const minutes = now.getMinutes();
+    const seconds = now.getSeconds();
+    const milliseconds = now.getMilliseconds();
+
+    // 1. Cálculo del ángulo en grados:
+    const secondDegrees = (seconds + milliseconds / 1000) * 6;
+    const minuteDegrees = (minutes + seconds / 60) * 6;
+    const hourDegrees = (hours % 12 + minutes / 60) * 30;
+
+    // 2. Aplicar la compensación de -90 grados (offset)
+    // Esto es necesario porque 0 grados CSS es 'hacia la derecha' (las 3),
+    // pero queremos que 0 grados JS (las 12) esté 'hacia arriba'.
+
+    secondHand.style.transform = `rotate(${secondDegrees - 90}deg)`;
+    minuteHand.style.transform = `rotate(${minuteDegrees - 90}deg)`;
+    hourHand.style.transform = `rotate(${hourDegrees - 90}deg)`;
+  }
+
+  
+  // 4. Funcionalidad de Alarma
+  function setAlarm() {
+    if (isAlarmActive) {
+      clearAlarm();
+      // Si se pulsa 'Activar' cuando ya está activa, la desactiva y vuelve a empezar
+      if (setAlarmBtn.textContent === "Detener Alarma") return; 
+    }
+    
+    if (!alarmTimeInput.value) {
+      alert("Por favor, selecciona una hora para la alarma.");
+      return;
+    }
+    
+    const now = new Date();
+    const alarmDate = new Date();
+    const [hours, minutes] = alarmTimeInput.value.split(':').map(Number);
+    
+    alarmDate.setHours(hours, minutes, 0, 0);
+    
+    // Si la hora seleccionada ya pasó hoy, programar para mañana
+    if (alarmDate <= now) {
+      alarmDate.setDate(alarmDate.getDate() + 1);
+    }
+    
+    const timeUntilAlarm = alarmDate.getTime() - now.getTime();
+    
+    alarmTimeout = setTimeout(() => {
+      triggerAlarm();
+    }, timeUntilAlarm);
+    
+    isAlarmActive = true;
+    alarmStatus.textContent = `Alarma activada para ${alarmTimeInput.value} (${alarmDate.toLocaleDateString('es-ES')})`;
+    alarmStatus.style.color = "var(--primary-color)";
+    setAlarmBtn.textContent = "Detener Alarma";
+    
+    saveAlarmTime();
+  }
+  
+  function clearAlarm() {
+    if (alarmTimeout) {
+      clearTimeout(alarmTimeout);
+      alarmTimeout = null;
+    }
+    
+    isAlarmActive = false;
+    alarmStatus.textContent = "Alarma desactivada";
+    alarmStatus.style.color = "var(--text-color)";
+    setAlarmBtn.textContent = "Activar Alarma";
+    alarmSection.classList.remove('alarm-ring');
+    
+    localStorage.removeItem("alarmTime");
+  }
+  
+  function triggerAlarm() {
+    playSound(440, 500, 0.5); // Tono A4, 0.5 segundos, volumen medio
+    setTimeout(() => playSound(880, 500, 0.5), 1000); // Tono A5
+    
+    alarmSection.classList.add('alarm-ring');
+    alert("¡ALARMA! Son las " + alarmTimeInput.value);
+    
+    // Limpiar después de que el usuario vea la alerta
+    clearAlarm();
+  }
+  
+  function saveAlarmTime() {
+    if (isAlarmActive) {
+      localStorage.setItem("alarmTime", alarmTimeInput.value);
+    }
+  }
+  
+  function loadAlarmTime() {
+    const savedAlarmTime = localStorage.getItem("alarmTime");
+    if (savedAlarmTime) {
+      alarmTimeInput.value = savedAlarmTime;
+      // Intenta activar la alarma cargada, pero requiere interacción
+      // setAlarm();
+      alarmStatus.textContent = `Alarma cargada para ${savedAlarmTime}. Pulsa Activar para confirmarla.`;
+    }
+  }
+  
+  // 5. Funcionalidad de Temporizador
+  function startTimer() {
+    if (timerRunning) return;
+    
+    const minutes = parseInt(timerMinutesInput.value) || 0;
+    const seconds = parseInt(timerSecondsInput.value) || 0;
+    totalTimerSeconds = minutes * 60 + seconds;
+    
+    if (totalTimerSeconds <= 0) {
+      alert("Por favor, establece un tiempo válido para el temporizador.");
+      return;
+    }
+    
+    timerRunning = true;
+    startTimerBtn.textContent = "Pausar";
+    
+    timerInterval = setInterval(() => {
+      totalTimerSeconds--;
+      updateTimerDisplay(totalTimerSeconds);
+      
+      if (totalTimerSeconds <= 0) {
+        clearInterval(timerInterval);
+        timerRunning = false;
+        startTimerBtn.textContent = "Iniciar";
+        playSound(1000, 1000, 1.0);
+        alert("¡Tiempo terminado!");
+        updateTimerDisplay(0); // Mostrar 00:00
+      }
+    }, 1000);
+  }
+  
+  function stopTimer() {
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        timerRunning = false;
+        startTimerBtn.textContent = "Iniciar";
+        
+        // Resetear a los valores iniciales para que 'Iniciar' empiece desde el principio
+        const initialMinutes = parseInt(timerMinutesInput.value) || 0;
+        const initialSeconds = parseInt(timerSecondsInput.value) || 0;
+        const initialTotal = initialMinutes * 60 + initialSeconds;
+        updateTimerDisplay(initialTotal);
+        
+    } else {
+        // Si no está corriendo, simplemente vuelve a los valores iniciales
+        const initialMinutes = parseInt(timerMinutesInput.value) || 0;
+        const initialSeconds = parseInt(timerSecondsInput.value) || 0;
+        const initialTotal = initialMinutes * 60 + initialSeconds;
+        updateTimerDisplay(initialTotal);
+    }
+  }
+  
+  function updateTimerDisplay(totalSeconds) {
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  }
+  
+  // 6. Funcionalidad de Cronómetro
+  function startStopwatch() {
+    if (stopwatchRunning) return;
+    
+    stopwatchRunning = true;
+    startStopwatchBtn.disabled = true;
+    pauseStopwatchBtn.disabled = false;
+    
+    const startTime = Date.now() - stopwatchTime;
+    
+    stopwatchInterval = setInterval(() => {
+      stopwatchTime = Date.now() - startTime;
+      updateStopwatchDisplay();
+    }, 10);
+  }
+  
+  function pauseStopwatch() {
+    if (stopwatchInterval) {
+      clearInterval(stopwatchInterval);
+      stopwatchInterval = null;
+    }
+    stopwatchRunning = false;
+    startStopwatchBtn.disabled = false;
+  }
+  
+  function resetStopwatch() {
+    pauseStopwatch();
+    stopwatchTime = 0;
+    updateStopwatchDisplay();
+    startStopwatchBtn.disabled = false;
+    pauseStopwatchBtn.disabled = true;
+  }
+  
+  function updateStopwatchDisplay() {
+    const totalSeconds = stopwatchTime / 1000;
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = Math.floor(totalSeconds % 60);
+    const milliseconds = Math.floor((stopwatchTime % 1000) / 10);
+    
+    stopwatchDisplay.textContent = 
+      `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(2, '0')}`;
+  }
+  
+  // --- Event Listeners ---
+  // Inicializa audio al interactuar con el DOM
+  document.body.addEventListener('click', initAudio, { once: true });
+  document.body.addEventListener('keypress', initAudio, { once: true });
+
+  formatToggle.addEventListener("change", savePreferences);
+  themeToggle.addEventListener("change", () => {
+    applyTheme();
+    savePreferences();
+  });
+  soundToggle.addEventListener("change", savePreferences); // El initAudio ya se gestiona con el primer click
+
+  setAlarmBtn.addEventListener("click", setAlarm);
+  clearAlarmBtn.addEventListener("click", clearAlarm);
+  
+  startTimerBtn.addEventListener("click", () => {
+      if (timerRunning) {
+          // Pausa
+          clearInterval(timerInterval);
+          timerInterval = null;
+          timerRunning = false;
+          startTimerBtn.textContent = "Reanudar";
+      } else if (startTimerBtn.textContent === "Reanudar") {
+          // Reanudar
+          startTimer();
+      } else {
+          // Iniciar
+          startTimer();
+      }
+  });
+  stopTimerBtn.addEventListener("click", stopTimer); // Usado como Detener/Reset
+
+  startStopwatchBtn.addEventListener("click", startStopwatch);
+  pauseStopwatchBtn.addEventListener("click", pauseStopwatch);
+  resetStopwatchBtn.addEventListener("click", resetStopwatch);
+  
+  // --- Inicialización ---
+  createAnalogClockMarks();
+  loadPreferences();
+  loadAlarmTime();
+  updateStopwatchDisplay(); // Inicializar display del cronómetro
+  
+  // Animación continua (usando requestAnimationFrame para suavidad)
+  const tick = () => {
+    updateDigitalClock();
+    updateAnalogClock();
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+});
+</script>
+
+</body>
+</html>
